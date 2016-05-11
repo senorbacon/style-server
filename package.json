@@ -9,6 +9,8 @@
   "author": "Terren Suydam",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.13.4"
+    "aws-sdk": "^2.3.9",
+    "express": "^4.13.4",
+    "http-status-codes": "^1.0.6"
   }
 }

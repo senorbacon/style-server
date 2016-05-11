@@ -1,46 +1,42 @@
 var express = require('express');
-var childProcess = require("child_process");
+var httpStatus = require('http-status-codes');
+var launcher = require('./src/launcher.js');
+var config = require('./config/config.js');
 
 var app = express();
 var port = 3000;
-var restarts = 0;
-var restart_threshold = 20;
 
 // TODO: get server id from AWS
 var server_id = "1";
 
-var child = childProcess.fork("./src/generate");
-child.on('close', (code) => {
-    if (restarts++ < restart_threshold) {
-        child = childProcess.fork("./src/generate");
-    } else {
-        // TODO: signal to queue that couldn't keep generate process open
-        console.log("Couldn't keep generate process open! Restarted " + restart_threshold + " times.")
-        process.exit();
-    }
-});
+app.set('etag', false);
 
 // TODO: switch to POST
 app.get('/generate', function(req, res) {
-    busy = true;
-    // TODO: send BUSY signal to AWS Queue
+    status = httpStatus.OK;
 
     data = req.body || req.query;
-
-    if (child) {
-        child.send({'generate': data});
-    } else {
-        // TODO: signal to queue to retry the generate command
-        console.log("retry the generate request");
+    if (!launcher.send({'generate': data})) {
+        status = httpStatus.SERVICE_UNAVAILABLE;
     }
 
-    res.send();
+    res.status(status).send();
 });
 
 // TODO: switch to POST
 app.get('/cancel', function(req, res) {
-    child.send({'cancel': data});
-    res.send();
+    status = httpStatus.OK;
+
+    data = req.body || req.query;
+
+    // if launcher went away, there's nothing to cancel so this always returns OK 
+    // but log it if so
+    if (!launcher.send({'cancel': data})) {
+        console.log("cancel request ignored since launcher process is unavailable");
+        //TODO: signal that cancel failed since the launcher process went away
+    }
+
+    res.status(status).send();
 })
 
 app.listen(port, function () {

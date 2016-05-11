@@ -1,14 +1,21 @@
 var childProcess = require("child_process");
+var config = require('../config/config.js');
+
 var child = null;
 
-var command = "node";
-var args = ["./src/delay.js"];
+var command = config.command;
+var args = config.args;
 
 process.on('message', function(data)
 {
     if (data.generate) {
         if (!child) {
             child = childProcess.spawn(command, args);
+
+            console.log(`Got generate command, spawning ${command} ` + args.join(' '))
+
+            // TODO: send SERVER_BUSY signal to AWS Queue
+
             child.customData = data;
 
             child.stdout.on('data', (data) => {
@@ -26,6 +33,7 @@ process.on('message', function(data)
                     console.log(`generate process exited with code ${code}`);
                 }
                 child = null;
+                // TODO: send SERVER_IDLE signal to AWS Queue
             });
         } else {
             //TODO: signal to AWS queue that request ID {data.requestId} failed SERVER_BUSY
@@ -33,7 +41,7 @@ process.on('message', function(data)
         }
     } else if (data.cancel) {
         if (child) {
-            if (child.customData.generate.requestId = data.cancel.requestId) {
+            if (child.customData.generate.requestId == data.cancel.requestId) {
                 child.kill();
                 console.log("generate process cancelled");
                 //TODO: signal to AWS queue that request ID was terminated
@@ -45,6 +53,8 @@ process.on('message', function(data)
             console.log("cancel request ignored since generate process already went away");
             //TODO: signal that termination failed since the generate process already went away
         }
+    } else {
+        console.log("unknown command");
     }
 }).on('uncaughtException', function(err)
 {
