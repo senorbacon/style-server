@@ -1,39 +1,35 @@
 var childProcess = require("child_process");
 var config = require('../config/config.js');
 
-(function() {
-    var generate = null;
+var generator = null;
 
-    var restarts = 0;
-    var restart_threshold = config.restart_threshold;
+var restarts = 0;
+var restart_threshold = config.restart_threshold;
 
-    var restart = function() 
-    {
-        generate = childProcess.fork("./src/generate");
-
-        generate.on('close', (code) => {
-            if (restarts++ < restart_threshold) {
-                restart();
-            } else {
-                // TODO: signal to queue that couldn't keep generate process open
-                console.log("Couldn't keep generate process open! Restarted " + restart_threshold + " times.")
-                process.exit();
-            }
-        });
+module.exports.send = function(msg) {
+    if (generator) {
+        generator.send(msg);
+        return true;
+    } else {
+        // TODO: signal to queue to retry the generator command
+        console.log("generator process went away - retry request");
+        return false;
     }
+}
 
-    module.exports.send = function(data)
-    {
-        if (generate) {
-            generate.send(data);
-            return true;
+var start = function() {
+    generator = childProcess.fork("./src/generate");
+
+    generator.on('close', (code) => {
+        if (restarts++ < restart_threshold) {
+            start();
         } else {
-            // TODO: signal to queue to retry the generate command
-            console.log("generate process went away - retry request");
-            return false;
+            // TODO: signal to queue that couldn't keep generator process open
+            console.log("Couldn't keep generator process open! Restarted " + restart_threshold + " times.")
+            process.exit();
         }
-    }
+    });
+}
 
-    restart();
-})();
+start();
 

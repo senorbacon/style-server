@@ -6,57 +6,74 @@ var child = null;
 var command = config.command;
 var args = config.args;
 
-process.on('message', function(data)
-{
-    if (data.generate) {
-        if (!child) {
-            child = childProcess.spawn(command, args);
+process.on('message', function(msg) {
+    msg.command = msg.command || '';
+    var data = msg.data;
 
-            console.log(`Got generate command, spawning ${command} ` + args.join(' '))
+    switch (msg.command) {
+        case 'generate': 
+            generate(data);
+            break;
 
-            // TODO: send SERVER_BUSY signal to AWS Queue
+        case 'cancel': 
+            cancel(data);
+            break;
 
-            child.customData = data;
-
-            child.stdout.on('data', (data) => {
-                console.log(`stdout: ${data}`);
-                //TODO: detect progress
-                //TODO: signal to AWS queue that request ID {data.requestId} is at progress x%
-            });
-
-            child.on('close', (code) => {
-                if (code == 0) {
-                    //TODO: signal to AWS queue that request ID {data.requestId} succeeded
-                    console.log("generate process succeeded");
-                } else {
-                    //TODO: signal to AWS queue that request ID {data.requestId} failed due to exit code ${code}
-                    console.log(`generate process exited with code ${code}`);
-                }
-                child = null;
-                // TODO: send SERVER_IDLE signal to AWS Queue
-            });
-        } else {
-            //TODO: signal to AWS queue that request ID {data.requestId} failed SERVER_BUSY
-            console.log("generate request failed, server busy");
+        default: {
+            console.log("unknown command");
         }
-    } else if (data.cancel) {
-        if (child) {
-            if (child.customData.generate.requestId == data.cancel.requestId) {
-                child.kill();
-                console.log("generate process cancelled");
-                //TODO: signal to AWS queue that request ID was terminated
+    }
+});
+
+function generate(data) {
+    if (!child) {
+        child = childProcess.spawn(command, args);
+
+        console.log(`Got generate command, spawning ${command} ` + args.join(' '))
+
+        // TODO: send SERVER_BUSY signal to AWS Queue
+
+        child.customData = data;
+
+        child.stdout.on('data', (output) => {
+            console.log(`stdout: ${output}`);
+            //TODO: detect progress
+            //TODO: signal to AWS queue that request ID {data.requestId} is at progress x%
+        });
+
+        child.on('close', (code) => {
+            if (code == 0) {
+                //TODO: signal to AWS queue that request ID {data.requestId} succeeded
+                console.log("generate process succeeded");
             } else {
-                console.log("did not cancel generate process, requestIDs did not match");
-                //TODO: signal to AWS queue that cancel failed because we wanted to cancel a request this server is not servicing
+                //TODO: signal to AWS queue that request ID {data.requestId} failed due to exit code ${code}
+                console.log(`generate process exited with code ${code}`);
             }
+            child = null;
+            // TODO: send SERVER_IDLE signal to AWS Queue
+        });
+    } else {
+        //TODO: signal to AWS queue that request ID {data.requestId} failed SERVER_BUSY
+        console.log("generate request failed, server busy");
+    }
+}
+
+function cancel(data) {
+    if (child) {
+        if (child.customData.requestId == data.requestId) {
+            child.kill();
+            console.log("generate process cancelled");
+            //TODO: signal to AWS queue that request ID was terminated
         } else {
-            console.log("cancel request ignored since generate process already went away");
-            //TODO: signal that termination failed since the generate process already went away
+            console.log("did not cancel generate process, requestIDs did not match");
+            //TODO: signal to AWS queue that cancel failed because we wanted to cancel a request this server is not servicing
         }
     } else {
-        console.log("unknown command");
+        console.log("cancel request ignored since generate process already went away");
+        //TODO: signal that termination failed since the generate process already went away
     }
-}).on('uncaughtException', function(err)
-{
+}
+
+process.on('uncaughtException', function(err) {
     console.log(err.message + "\n" + err.stack);
 });
