@@ -1,42 +1,68 @@
+var fs = require('fs');
+var AWS = require('aws-sdk'); 
+var when = require('when');
+var node = require('when/node');
 var httpStatus = require('http-status-codes');
-var launcher = require('./src/launcher.js');
+var interface = require('./interface.js');
+var config = require('../config/config.js');
+
+var s3 = new AWS.S3(); 
+
+var writeFile = node.lift(fs.writeFile);
 
 module.exports.generate = function(req, res) {
-    status = httpStatus.OK;
-
-    data = {
+    var event = {
         command: "generate",
         data: req.body || req.query
     }
 
-    if (!launcher.validate(data)) {
+    console.log(JSON.stringify(req.body));
+
+    if (!validate(event)) {
         status = httpStatus.BAD_REQUEST;
+        res.status(status).send();
+        return;
     }
 
-    if (!launcher.send(data)) {
-        status = httpStatus.SERVICE_UNAVAILABLE;
-    }
-
-    res.status(status).send();
+    when.join(
+        downloadImage(event.data.styleImage),
+        downloadImage(event.data.contentImage)
+    ).then(function() {
+        if (interface.send(event)) {
+            res.status(httpStatus.OK).send();
+        } else {
+            console.log("generate request failed since interface process is unavailable");
+            // TODO: signal to queue to retry the generator command
+            status = httpStatus.SERVICE_UNAVAILABLE;
+            res.status(status).send();
+        } 
+    }).catch(
+        e => {
+            console.log("fail downloading images: " + e)
+            // TODO: signal that request failed due to server error
+            status = httpStatus.INTERNAL_SERVER_ERROR;
+            res.status(status).send();
+        }
+    )
 }
 
 module.exports.cancel = function(req, res) {
     status = httpStatus.OK;
 
-    data = {
+    event = {
         command: "cancel",
         data: req.body || req.query
     }
 
-    if (!launcher.validate(data)) {
+    if (!validate(event)) {
         status = httpStatus.BAD_REQUEST;
     }
 
-    // if launcher went away, there's nothing to cancel so this always returns OK 
+    // if interface went away, there's nothing to cancel so this always returns OK 
     // but log it if so
-    if (!launcher.send(data)) {
-        console.log("cancel request ignored since launcher process is unavailable");
-        //TODO: signal that cancel failed since the launcher process went away
+    if (!interface.send(event)) {
+        console.log("cancel request ignored since interface process is unavailable");
+        //TODO: signal that cancel failed since the interface process went away
     }
 
     res.status(status).send();
@@ -68,3 +94,18 @@ function validate(msg) {
     return true;
 }
 
+function downloadImage(imageName) {
+    var params = {
+        "Bucket": config.bucket_public,
+        "Key": imageName
+    };
+
+    var promise = when(s3.getObject(params).promise()).then(
+        function(data) {
+            console.log("Got image " + imageName + ", size " + data.ContentLength);
+            return writeFile(config.tmp_dir + params.Key, data.Body);
+        }
+    );
+
+    return promise;
+}

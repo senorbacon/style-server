@@ -1,5 +1,7 @@
 var express = require('express');
 var config = require('./config/config.js');
+var routes = require('./src/routes.js');
+var bodyParser = require('body-parser');
 
 var app = express();
 var PORT = config.server_port || 3000;
@@ -8,6 +10,7 @@ var PORT = config.server_port || 3000;
 var server_id = "1";
 
 app.set('etag', false);
+app.use(bodyParser.json());
 
 app.post('/generate', routes.generate);
 app.post('/cancel', routes.cancel);

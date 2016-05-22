@@ -6,11 +6,11 @@ var child = null;
 var command = config.command;
 var args = config.args;
 
-process.on('message', function(msg) {
-    msg.command = msg.command || '';
-    var data = msg.data;
+process.on('message', function(event) {
+    var command = event.command || '';
+    var data = event.data;
 
-    switch (msg.command) {
+    switch (command) {
         case 'generate': 
             generate(data);
             break;

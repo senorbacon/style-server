@@ -6,13 +6,11 @@ var generator = null;
 var restarts = 0;
 var restart_threshold = config.restart_threshold;
 
-module.exports.send = function(msg) {
+module.exports.send = function(event) {
     if (generator) {
-        generator.send(msg);
+        generator.send(event);
         return true;
     } else {
-        // TODO: signal to queue to retry the generator command
-        console.log("generator process went away - retry request");
         return false;
     }
 }
