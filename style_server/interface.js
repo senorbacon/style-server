@@ -6,6 +6,8 @@ var generator = null;
 var restarts = 0;
 var restart_threshold = config.restart_threshold;
 
+process.chdir(__dirname);
+
 module.exports.send = function(event) {
     if (generator) {
         generator.send(event);
@@ -16,7 +18,7 @@ module.exports.send = function(event) {
 }
 
 var start = function() {
-    generator = childProcess.fork("./src/generate");
+    generator = childProcess.fork("./generate.js");
 
     generator.on('close', (code) => {
         if (restarts++ < restart_threshold) {
