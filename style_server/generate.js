@@ -4,7 +4,7 @@ var config = require('../config/config.js');
 var child = null;
 
 var command = config.command;
-var args = config.args;
+var args = config.args.split(';');
 
 process.on('message', function(event) {
     var command = event.command || '';

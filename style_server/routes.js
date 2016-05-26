@@ -4,9 +4,10 @@ var when = require('when');
 var node = require('when/node');
 var httpStatus = require('http-status-codes');
 var interface = require('./interface.js');
+var sqs = require('../sqs/sqs.js');
 var config = require('../config/config.js');
 
-var s3 = new AWS.S3(); 
+var s3 = new AWS.S3({apiVersion: '2006-03-01'}); 
 
 var writeFile = node.lift(fs.writeFile);
 
@@ -33,8 +34,10 @@ module.exports.generate = function(req, res) {
         } else {
             console.log("generate request failed since interface process is unavailable");
             // TODO: signal to queue to retry the generator command
-            status = httpStatus.SERVICE_UNAVAILABLE;
-            res.status(status).send();
+            sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, sqs.MESSAGES.UPDATE_GENERATE_REQ, event.data).complete(() => {
+                status = httpStatus.SERVICE_UNAVAILABLE;
+                res.status(status).send();
+            });
         } 
     }).catch(
         e => {
