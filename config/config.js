@@ -15,6 +15,6 @@ config.tmp_dir = process.env.TEMP_DIR || "c:\\tmp\\style\\";
 config.restart_threshold = 20;
 
 config.command = process.env.STYLE_CMD || "node";
-config.args = process.env.STYLE_CMD_ARGS || "./src/delay.js";
+config.args = process.env.STYLE_CMD_ARGS || "./delay.js";
 
 module.exports = config;

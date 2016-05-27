@@ -9,8 +9,11 @@ var config = require('../config/config.js');
 
 var s3 = new AWS.S3({apiVersion: '2006-03-01'}); 
 
-var writeFile = node.lift(fs.writeFile);
-
+/**
+ * Generate an image.
+ * Validate the request, download the images from S3,
+ * then kick off the command.
+ */
 module.exports.generate = function(req, res) {
     var event = {
         command: "generate",
@@ -28,7 +31,7 @@ module.exports.generate = function(req, res) {
     when.join(
         downloadImage(event.data.styleImage),
         downloadImage(event.data.contentImage)
-    ).then(function() {
+    ).done(() => {
         if (interface.send(event)) {
             res.status(httpStatus.OK).send();
         } else {
@@ -39,8 +42,7 @@ module.exports.generate = function(req, res) {
                 res.status(status).send();
             });
         } 
-    }).catch(
-        e => {
+    }, e => {
             console.log("fail downloading images: " + e)
             // TODO: signal that request failed due to server error
             status = httpStatus.INTERNAL_SERVER_ERROR;
@@ -49,6 +51,10 @@ module.exports.generate = function(req, res) {
     )
 }
 
+/**
+ * Cancel an ongoing image generation.
+ * Validate the request, then cancel.
+ */
 module.exports.cancel = function(req, res) {
     status = httpStatus.OK;
 
@@ -71,6 +77,10 @@ module.exports.cancel = function(req, res) {
     res.status(status).send();
 }
 
+
+/**
+ * Validate the request
+ */
 function validate(msg) {
     var result = true;
     var command = msg.command || '';
@@ -96,6 +106,9 @@ function validate(msg) {
     }
     return true;
 }
+
+// convert writeFile into a thenable
+var writeFile = node.lift(fs.writeFile);
 
 function downloadImage(imageName) {
     var params = {

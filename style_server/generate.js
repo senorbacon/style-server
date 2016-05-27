@@ -1,28 +1,35 @@
 var childProcess = require("child_process");
 var config = require('../config/config.js');
+var sqs = require('../sqs/sqs.js');
+
+process.chdir(__dirname);
 
 var child = null;
 
 var command = config.command;
 var args = config.args.split(';');
 
+var sqs_ready = sqs.init().then(() => {return true})
+
 process.on('message', function(event) {
-    var command = event.command || '';
-    var data = event.data;
+    sqs_ready.then(() => {
+        var command = event.command || '';
+        var data = event.data;
 
-    switch (command) {
-        case 'generate': 
-            generate(data);
-            break;
+        switch (command) {
+            case 'generate': 
+                generate(data);
+                break;
 
-        case 'cancel': 
-            cancel(data);
-            break;
+            case 'cancel': 
+                cancel(data);
+                break;
 
-        default: {
-            console.log("unknown command");
+            default: {
+                console.log("unknown command");
+            }
         }
-    }
+    });
 });
 
 function generate(data) {
