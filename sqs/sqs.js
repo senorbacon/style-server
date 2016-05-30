@@ -15,10 +15,13 @@ module.exports.QUEUES = {
 module.exports.init = function loadQueueUrls() {
     var promises = [];
 
+    // get a promise for each queue in our QUEUEs array
     Object.keys(module.exports.QUEUES).forEach(function(key) {
         promises.push(loadQueueUrl(key));
     });
 
+    // get a promise that's only fulfilled once everything in the array is,
+    // then set the Queue URLs
     return when.all(promises).then(function(queueUrls) {
         queueUrls.forEach(function(data) {
             module.exports.QUEUES[data.queueName] = data.queueUrl;
@@ -30,23 +33,21 @@ module.exports.init = function loadQueueUrls() {
     });
 }
 
-module.exports.sendQueueMessage = function (queue, type, data) {
-    var queueUrl = module.exports.QUEUES[queue];
+module.exports.sendQueueMessage = function (queueUrl, type, data) {
     if (!queueUrl)
-        throw new Error("Invalid Queue name " + queue);
+        throw new Error("Invalid Queue URL " + queueUrl);
+
+    var payload = {
+        type: type,
+        data: data
+    };
 
     var params = {
         QueueUrl: queueUrl,
+        MessageBody: JSON.stringify(payload)
     };
 
-    var promise = when(sqs.sendMessage(params).promise()).then(
-        function(data) {
-            console.log("Got image " + imageName + ", size " + data.ContentLength);
-            return writeFile(config.tmp_dir + params.Key, data.Body);
-        }
-    );
-
-    return promise;
+    return when(sqs.sendMessage(params).promise());
 }
 
 function loadQueueUrl(queueName) {
