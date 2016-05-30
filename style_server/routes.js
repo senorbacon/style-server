@@ -36,15 +36,16 @@ module.exports.generate = function(req, res) {
             res.status(httpStatus.OK).send();
         } else {
             console.log("generate request failed since interface process is unavailable");
-            // TODO: signal to queue to retry the generator command
-            sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, sqs.MESSAGES.UPDATE_GENERATE_REQ, event.data).complete(() => {
+            
+            sqs.sendQueueMessage(sqs.QUEUES.STYLE_GENERATE_CMD, constants.MSG_RETRY_GENERATE, event.data).complete(() => {
                 status = httpStatus.SERVICE_UNAVAILABLE;
                 res.status(status).send();
             });
         } 
     }, e => {
             console.log("fail downloading images: " + e)
-            // TODO: signal that request failed due to server error
+            event.data._error = e;
+            sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, constants.MSG_DOWNLOAD_SERVER_ERROR, event.data).complete(() => {
             status = httpStatus.INTERNAL_SERVER_ERROR;
             res.status(status).send();
         }
@@ -71,7 +72,7 @@ module.exports.cancel = function(req, res) {
     // but log it if so
     if (!interface.send(event)) {
         console.log("cancel request ignored since interface process is unavailable");
-        //TODO: signal that cancel failed since the interface process went away
+        sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, constants.MSG_CANCEL_FAILED, event.data);
     }
 
     res.status(status).send();
@@ -110,6 +111,10 @@ function validate(msg) {
 // convert writeFile into a thenable
 var writeFile = node.lift(fs.writeFile);
 
+/**
+ * Return a promise that when fulfilled, will write the S3 object
+ * a temporary storage.
+ */
 function downloadImage(imageName) {
     var params = {
         "Bucket": config.bucket_public,

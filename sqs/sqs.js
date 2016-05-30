@@ -20,8 +20,8 @@ module.exports.init = function loadQueueUrls() {
         promises.push(loadQueueUrl(key));
     });
 
-    // get a promise that's only fulfilled once everything in the array is,
-    // then set the Queue URLs
+    // get a promise that's only fulfilled once everything in the array is
+    // fulfilled, then set the Queue URLs
     return when.all(promises).then(function(queueUrls) {
         queueUrls.forEach(function(data) {
             module.exports.QUEUES[data.queueName] = data.queueUrl;
