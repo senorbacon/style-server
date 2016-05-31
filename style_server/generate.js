@@ -9,7 +9,7 @@ var child = null;
 var command = config.command;
 var args = config.args.split(';');
 
-var sqsReady = sqs.init().then(() => {return true})
+var sqsReady = sqs.init();
 
 process.on('message', function(event) {
     sqsReady.then(() => {
@@ -38,7 +38,7 @@ function generate(data) {
 
         console.log(`Got generate command, spawning ${command} ` + args.join(' '))
 
-        // TODO: send SERVER_BUSY signal to AWS Queue
+        // TODO: send JOB_STARTED signal to AWS Queue
 
         child.customData = data;
 
@@ -58,7 +58,7 @@ function generate(data) {
                 console.log(`generate process exited with code ${code}`);
             }
             child = null;
-            // TODO: send serverIdLE signal to AWS Queue
+            // TODO: send JOB_ENDED signal to AWS Queue
         });
     } else {
         //TODO: signal to AWS queue that request ID {data.requestId} failed SERVER_BUSY
