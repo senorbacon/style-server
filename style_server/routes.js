@@ -37,19 +37,19 @@ module.exports.generate = function(req, res) {
         } else {
             console.log("generate request failed since interface process is unavailable");
             
-            sqs.sendQueueMessage(sqs.QUEUES.STYLE_GENERATE_CMD, constants.MSG_RETRY_GENERATE, event.data).complete(() => {
+            sqs.sendQueueMessage(sqs.QUEUES.STYLE_GENERATE_CMD, config.serverId, constants.MSG_RETRY_GENERATE, event.data).complete(() => {
                 status = httpStatus.SERVICE_UNAVAILABLE;
                 res.status(status).send();
             });
         } 
     }, e => {
-            console.log("fail downloading images: " + e)
-            event.data._error = e;
-            sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, constants.MSG_DOWNLOAD_SERVER_ERROR, event.data).complete(() => {
+        console.log("fail downloading images: " + e)
+        event.data._error = e;
+        sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_DOWNLOAD_SERVER_ERROR, event.data).complete(() => {
             status = httpStatus.INTERNAL_SERVER_ERROR;
             res.status(status).send();
-        }
-    )
+        });
+    });
 }
 
 /**
@@ -72,7 +72,7 @@ module.exports.cancel = function(req, res) {
     // but log it if so
     if (!interface.send(event)) {
         console.log("cancel request ignored since interface process is unavailable");
-        sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, constants.MSG_CANCEL_FAILED, event.data);
+        sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_CANCEL_FAILED, event.data);
     }
 
     res.status(status).send();
@@ -117,14 +117,14 @@ var writeFile = node.lift(fs.writeFile);
  */
 function downloadImage(imageName) {
     var params = {
-        "Bucket": config.bucket_public,
+        "Bucket": config.bucketPublic,
         "Key": imageName
     };
 
     var promise = when(s3.getObject(params).promise()).then(
         function(data) {
             console.log("Got image " + imageName + ", size " + data.ContentLength);
-            return writeFile(config.tmp_dir + params.Key, data.Body);
+            return writeFile(config.tmpDir + params.Key, data.Body);
         }
     );
 

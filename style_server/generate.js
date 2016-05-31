@@ -9,10 +9,10 @@ var child = null;
 var command = config.command;
 var args = config.args.split(';');
 
-var sqs_ready = sqs.init().then(() => {return true})
+var sqsReady = sqs.init().then(() => {return true})
 
 process.on('message', function(event) {
-    sqs_ready.then(() => {
+    sqsReady.then(() => {
         var command = event.command || '';
         var data = event.data;
 
@@ -46,6 +46,7 @@ function generate(data) {
             console.log(`stdout: ${output}`);
             //TODO: detect progress
             //TODO: signal to AWS queue that request ID {data.requestId} is at progress x%
+            //TODO: upload partial image 
         });
 
         child.on('close', (code) => {
@@ -57,7 +58,7 @@ function generate(data) {
                 console.log(`generate process exited with code ${code}`);
             }
             child = null;
-            // TODO: send SERVER_IDLE signal to AWS Queue
+            // TODO: send serverIdLE signal to AWS Queue
         });
     } else {
         //TODO: signal to AWS queue that request ID {data.requestId} failed SERVER_BUSY

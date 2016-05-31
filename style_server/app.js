@@ -16,9 +16,9 @@ app.post('/cancel', routes.cancel);
 
 // start the server once everything's ready to go
 sqs.init().done(() => {
-    app.listen(config.server_port, function () {
-        sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, constants.MSG_SERVER_ONLINE, config.server_id)
-        console.log("Style server [" + config.server_id + "] listening on port " + config.server_port);
+    app.listen(config.serverPort, function () {
+        sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, constants.MSG_SERVER_ONLINE, config.serverId)
+        console.log("Style server [" + config.serverId + "] listening on port " + config.serverPort);
     });
 }, e => {
     console.log("Couldn't start server: " + e);

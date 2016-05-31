@@ -33,11 +33,12 @@ module.exports.init = function loadQueueUrls() {
     });
 }
 
-module.exports.sendQueueMessage = function (queueUrl, type, data) {
+module.exports.sendQueueMessage = function (queueUrl, serverId, type, data) {
     if (!queueUrl)
         throw new Error("Invalid Queue URL " + queueUrl);
 
     var payload = {
+        server: serverId,
         type: type,
         data: data
     };
