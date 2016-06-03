@@ -33,6 +33,12 @@ module.exports.init = function loadQueueUrls() {
     });
 }
 
+/**
+ * Send a message to one of our SQS queues.
+ * If this fails for some reason, terminate the process. It's a big problem 
+ * if we can't rely on the queues - we can't be tolerant of the occasional
+ * failure.
+ */
 module.exports.sendQueueMessage = function (queueUrl, serverId, type, data) {
     if (!queueUrl)
         throw new Error("Invalid Queue URL " + queueUrl);
@@ -48,7 +54,10 @@ module.exports.sendQueueMessage = function (queueUrl, serverId, type, data) {
         MessageBody: JSON.stringify(payload)
     };
 
-    return when(sqs.sendMessage(params).promise());
+    return when(sqs.sendMessage(params).promise()).catch((e) => {
+        console.log("FATAL: failed to send Queue message because [" + e + "] " + JSON.stringify(params));
+        process.exit();
+    });
 }
 
 function loadQueueUrl(queueName) {

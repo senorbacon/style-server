@@ -34,35 +34,49 @@ process.on('message', function(event) {
 
 function generate(data) {
     if (!child) {
-        child = childProcess.spawn(command, args);
-
         console.log(`Got generate command, spawning ${command} ` + args.join(' '))
 
-        // TODO: send JOB_STARTED signal to AWS Queue
+        child = childProcess.spawn(command, args);
 
         child.customData = data;
 
         child.stdout.on('data', (output) => {
             console.log(`stdout: ${output}`);
             //TODO: detect progress
-            //TODO: signal to AWS queue that request ID {data.requestId} is at progress x%
-            //TODO: upload partial image 
+            var progress = 0;
+            //TODO: upload partial image
+            //var progressImage = ...
+            //var bucket = ...
+            //var s3ObjectName = ...
+            //uploadImage(progressImage, bucket, s3ObjectName).then(() => {
+                data.progress = progress;
+                data.bucket = bucket;
+                data.s3ObjectName = s3ObjectName;
+                sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATE_PROGRESS, data);
+            //}) 
         });
 
         child.on('close', (code) => {
             if (code == 0) {
-                //TODO: signal to AWS queue that request ID {data.requestId} succeeded
+                // TODO: did we upload the final image in the progress code?
+                // TODO: if not, we need to do it here
+                sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATE_SUCCESS, data);
                 console.log("generate process succeeded");
             } else {
-                //TODO: signal to AWS queue that request ID {data.requestId} failed due to exit code ${code}
+                data.err_code = code;
+                sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATE_FAILED, data);
                 console.log(`generate process exited with code ${code}`);
             }
             child = null;
-            // TODO: send JOB_ENDED signal to AWS Queue
+            console.log(`Request ${data.requestId} has finished processing.`);
+            sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_JOB_FINISHED, data);
         });
+
+        console.log(`Request ${data.requestId} has started processing.`);
+        sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_JOB_STARTED, data);
     } else {
-        //TODO: signal to AWS queue that request ID {data.requestId} failed SERVER_BUSY
         console.log("generate request failed, server busy");
+        sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_SERVER_BUSY, data);
     }
 }
 
@@ -71,14 +85,14 @@ function cancel(data) {
         if (child.customData.requestId == data.requestId) {
             child.kill();
             console.log("generate process cancelled");
-            //TODO: signal to AWS queue that request ID was terminated
+            sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATE_CANCELLED, data);
         } else {
             console.log("did not cancel generate process, requestIDs did not match");
-            //TODO: signal to AWS queue that cancel failed because we wanted to cancel a request this server is not servicing
+            sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_INVALID_CANCEL_REQ, data);
         }
     } else {
         console.log("cancel request ignored since generate process already went away");
-        //TODO: signal that termination failed since the generate process already went away
+        sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_CANCEL_IGNORED, data);
     }
 }
 

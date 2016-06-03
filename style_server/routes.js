@@ -92,6 +92,11 @@ function validate(msg) {
         return false;
     }
 
+    if (!data.userId) {
+        console.log("Missing parameter userId");
+        return false;
+    }
+
     switch (command) {
         case 'generate': {
             if (!data.styleImage) {
