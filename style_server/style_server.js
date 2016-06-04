@@ -23,3 +23,7 @@ sqs.init().done(() => {
 }, e => {
     console.log("Couldn't start server: " + e);
 });
+
+process.on('exit', () => {
+  console.log('style server closing!');
+});
