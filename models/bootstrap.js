@@ -1,5 +1,5 @@
 var mongoose   = require('mongoose');
-var config     = require('../config/config');
+var config     = require('../config');
 
 // configure mongodb
 mongoose.connect(config.mongodb.connectionString || 'mongodb://' + config.mongodb.user + ':' + config.mongodb.password + '@' + config.mongodb.server +'/' + config.mongodb.database);

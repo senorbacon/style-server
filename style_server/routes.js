@@ -5,7 +5,7 @@ var node = require('when/node');
 var httpStatus = require('http-status-codes');
 var interface = require('./interface.js');
 var sqs = require('../sqs/sqs.js');
-var config = require('../config/config.js');
+var config = require('../config');
 
 var s3 = new AWS.S3({apiVersion: '2006-03-01'}); 
 
