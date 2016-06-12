@@ -1,9 +1,9 @@
-var config = require('../config/config.js');
-var sqs = require('../sqs/sqs.js');
-var constants = require('../common/constants.js');
-var commands = require('./commands.js');
-var updates = require('./updates.js');
-
+var config = require('../config/config');
+var sqs = require('../sqs/sqs');
+var constants = require('../common/constants');
+var commands = require('./commands');
+var updates = require('./updates');
+var mongoose = require('../models/bootstrap');
 
 if (process.argv.length != 3) {
     console.log("Usage: node app.js <queue name>");
