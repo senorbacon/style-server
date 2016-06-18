@@ -1,5 +1,5 @@
 var childProcess = require("child_process");
-var config = require('../config/config.js');
+var config = require('../config');
 var sqs = require('../sqs/sqs.js');
 
 process.chdir(__dirname);

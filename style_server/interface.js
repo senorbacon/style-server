@@ -1,5 +1,6 @@
 var childProcess = require("child_process");
 var config = require('../config');
+var constants = require('../common/constants');
 var sqs = require('../sqs/sqs.js');
 
 var generator = null;

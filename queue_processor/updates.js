@@ -1,7 +1,11 @@
-var config = require('../config/config.js');
+var config = require('../config');
 var sqs = require('../sqs/sqs.js');
+var Server = require('../models/server');
 
 module.exports.serverOnline = function(event) {
+  Server.find({ instanceId: event.instanceId }).done( (instanceId) => {
+    console.log("found server with ID " + event.instanceId)
+  });
 }
 
 module.exports.jobStarted = function(event) {

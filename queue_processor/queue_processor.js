@@ -1,14 +1,15 @@
-var config = require('../config/config');
-var sqs = require('../sqs/sqs');
-var constants = require('../common/constants');
-var commands = require('./commands');
-var updates = require('./updates');
-var mongoose = require('../models/bootstrap');
-
 if (process.argv.length != 3) {
     console.log("Usage: node app.js <queue name>");
     process.exit();
 }
+
+var config = require('../config');
+var sqs = require('../sqs/sqs');
+var constants = require('../common/constants');
+var commands = require('./commands');
+var updates = require('./updates');
+var when = require('when');
+var mongoose = require("../models/bootstrap")
 
 var queueName = process.argv[2]
 
@@ -36,10 +37,10 @@ handlers[constants.MSG_INVALID_CANCEL_REQ] = updates.invalidCancelReq;
 handlers[constants.MSG_CANCEL_IGNORED] = updates.cancelIgnored;
 
 // start the server once everything's ready to go
-sqs.init().done(() => {
+when.join(sqs.init(), mongoose.myInit()).done(() => {
     start();
 }, e => {
-    console.log("Couldn't start queue processor: " + e);
+    console.log("Couldn't start server: " + e);
 });
 
 function start() {

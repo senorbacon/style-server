@@ -1,10 +1,9 @@
 var express = require('express');
-var config = require('../config/config');
+var config = require('../config');
 var constants = require('../common/constants');
 var routes = require('./routes');
 var bodyParser = require('body-parser');
 var sqs = require('../sqs/sqs');
-var mongoose = require("../models/bootstrap")
 
 var app = express();
 
