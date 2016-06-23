@@ -4,7 +4,7 @@ var when       = require('when');
 
 // return a promise that fulfills with the mongoose object once we're connected
 mongoose.myInit = function() {
-  when.promise(function(resolve, reject) {
+  return when.promise(function(resolve, reject) {
     // configure mongodb
     mongoose.connect(config.mongodb.connectionString || 'mongodb://' + config.mongodb.user + ':' + config.mongodb.password + '@' + config.mongodb.server +'/' + config.mongodb.database);
 

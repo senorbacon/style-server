@@ -37,7 +37,7 @@ module.exports.generate = function(req, res) {
         } else {
             console.log("generate request failed since interface process is unavailable");
             
-            sqs.sendQueueMessage(sqs.QUEUES.STYLE_GENERATE_CMD, config.serverId, constants.MSG_RETRY_GENERATE, event.data).complete(() => {
+            sqs.sendQueueMessage(sqs.QUEUES.STYLE_GENERATE_CMD, config.serverId, constants.MSG_JOB_RETRY, event.data).complete(() => {
                 status = httpStatus.SERVICE_UNAVAILABLE;
                 res.status(status).send();
             });

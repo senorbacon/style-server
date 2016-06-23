@@ -14,7 +14,9 @@ var mongoose = require("../models/bootstrap")
 var queueName = process.argv[2]
 
 var handlers = {};
-handlers[constants.MSG_RETRY_GENERATE] = commands.retryGenerate;
+
+// job commands
+handlers[constants.MSG_JOB_RETRY] = commands.jobRetry;
 
 // server status updates
 handlers[constants.MSG_SERVER_ONLINE] = updates.serverOnline;
@@ -27,11 +29,11 @@ handlers[constants.MSG_DOWNLOAD_SERVER_ERROR] = updates.downloadServerError;
 handlers[constants.MSG_GENERATOR_RESTART] = updates.generatorRestart;
 handlers[constants.MSG_GENERATOR_FAILURE_THRESHOLD] = updates.failureThreshold;
 
-// generate request updates
-handlers[constants.MSG_GENERATE_PROGRESS] = updates.generateProgress;
-handlers[constants.MSG_GENERATE_SUCCESS] = updates.generateSuccess;
-handlers[constants.MSG_GENERATE_FAILED] = updates.generateFailed;
-handlers[constants.MSG_GENERATE_CANCELLED] = updates.generateCancelled;
+// job request updates
+handlers[constants.MSG_JOB_PROGRESS] = updates.jobProgress;
+handlers[constants.MSG_JOB_SUCCESS] = updates.jobSuccess;
+handlers[constants.MSG_JOB_FAILED] = updates.jobFailed;
+handlers[constants.MSG_JOB_CANCELLED] = updates.jobCancelled;
 handlers[constants.MSG_CANCEL_FAILED] = updates.cancelFailed;
 handlers[constants.MSG_INVALID_CANCEL_REQ] = updates.invalidCancelReq;
 handlers[constants.MSG_CANCEL_IGNORED] = updates.cancelIgnored;

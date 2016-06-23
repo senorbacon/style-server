@@ -52,7 +52,7 @@ function generate(data) {
                 data.progress = progress;
                 data.bucket = bucket;
                 data.s3ObjectName = s3ObjectName;
-                sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATE_PROGRESS, data);
+                sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_JOB_PROGRESS, data);
             //}) 
         });
 
@@ -60,11 +60,11 @@ function generate(data) {
             if (code == 0) {
                 // TODO: did we upload the final image in the progress code?
                 // TODO: if not, we need to do it here
-                sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATE_SUCCESS, data);
+                sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_JOB_SUCCESS, data);
                 console.log("generate process succeeded");
             } else {
                 data.err_code = code;
-                sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATE_FAILED, data);
+                sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_JOB_FAILED, data);
                 console.log(`generate process exited with code ${code}`);
             }
             child = null;
@@ -85,7 +85,7 @@ function cancel(data) {
         if (child.customData.requestId == data.requestId) {
             child.kill();
             console.log("generate process cancelled");
-            sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATE_CANCELLED, data);
+            sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_JOB_CANCELLED, data);
         } else {
             console.log("did not cancel generate process, requestIDs did not match");
             sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_INVALID_CANCEL_REQ, data);
