@@ -5,7 +5,7 @@ if (process.argv.length != 3) {
 
 var config = require('../config');
 var sqs = require('../sqs/sqs');
-var constants = require('../common/constants');
+var constants = require('../lib/constants');
 var commands = require('./commands');
 var updates = require('./updates');
 var when = require('when');

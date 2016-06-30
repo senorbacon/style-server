@@ -1,12 +1,14 @@
 var mongoose   = require('mongoose');
 var config     = require('../config');
 var when       = require('when');
+var autoIncrement = require('mongoose-auto-increment');
 
 // return a promise that fulfills with the mongoose object once we're connected
 mongoose.myInit = function() {
+  var connection;
+
   return when.promise(function(resolve, reject) {
-    // configure mongodb
-    mongoose.connect(config.mongodb.connectionString || 'mongodb://' + config.mongodb.user + ':' + config.mongodb.password + '@' + config.mongodb.server +'/' + config.mongodb.database);
+    connection = mongoose.connect(config.mongodb.connectionString || 'mongodb://' + config.mongodb.user + ':' + config.mongodb.password + '@' + config.mongodb.server +'/' + config.mongodb.database);
 
     mongoose.connection.on('error', function (err) {
       reject(err);
@@ -33,6 +35,8 @@ mongoose.myInit = function() {
         }
       });
     });
+  }).then(() => {
+    autoIncrement.initialize(connection);
   });
 };
 

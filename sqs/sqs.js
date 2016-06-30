@@ -1,5 +1,6 @@
 var AWS = require('aws-sdk'); 
 var when = require('when');
+var Event = require('../models/event');
 
 var sqs = new AWS.SQS({apiVersion: '2012-11-05', region: "us-west-2"});
 
@@ -43,15 +44,15 @@ module.exports.sendQueueMessage = function (queueUrl, serverId, type, data) {
     if (!queueUrl)
         throw new Error("Invalid Queue URL " + queueUrl);
 
-    var payload = {
-        server: serverId,
-        type: type,
+    var event = new Event({
+        fromServer: serverId, 
+        type: type, 
         data: data
-    };
+    });
 
     var params = {
         QueueUrl: queueUrl,
-        MessageBody: JSON.stringify(payload)
+        MessageBody: JSON.stringify(event)
     };
 
     return when(sqs.sendMessage(params).promise()).catch((e) => {

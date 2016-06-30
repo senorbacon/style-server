@@ -1,6 +1,6 @@
 var express = require('express');
 var config = require('../config');
-var constants = require('../common/constants');
+var constants = require('../lib/constants');
 var routes = require('./routes');
 var bodyParser = require('body-parser');
 var sqs = require('../sqs/sqs');
@@ -17,7 +17,7 @@ app.post('/cancel', routes.cancel);
 // start the server once everything's ready to go
 sqs.init().done(() => {
     app.listen(config.serverPort, function () {
-        sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, constants.MSG_SERVER_ONLINE, config.serverId)
+        sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_SERVER_ONLINE)
         console.log("Style server [" + config.serverId + "] listening on port " + config.serverPort);
     });
 }, e => {

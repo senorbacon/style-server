@@ -3,12 +3,12 @@ var Schema   = mongoose.Schema;
 
 // main model
 var Job = new Schema({
-  _id             : Number,
+  _id             : String,
   userId          : Number,
   state: {
-              type: String,
-              enum: ['NEW','STARTED','COMPLETED','PAUSED','FAILED'],
-           default: 'NEW'
+    type          : String,
+    enum          : ['NEW','STARTED','COMPLETED','PAUSED','FAILED'],
+    default       : 'NEW'
   },
   created         : Date,
   startTime       : Date,

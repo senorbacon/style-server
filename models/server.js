@@ -9,9 +9,9 @@ var Server = new Schema({
   _id             : String,
   created         : Date,
   state: {
-              type: String,
-              enum: ['OFFLINE','ONLINE','READY','BUSY'],
-           default: 'OFFLINE'
+    type          : String,
+    enum          : ['OFFLINE','ONLINE','READY','BUSY'],
+    default       : 'OFFLINE'
   },
   idleTime        : Number,
   busyTime        : Number,
