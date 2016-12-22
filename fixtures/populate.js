@@ -2,14 +2,11 @@ var mongoose = require('../models/bootstrap');
 var when = require('when');
 var constants = require('../lib/constants');
 
-var Server;
-var Job;
-var Event;
+var Server = require('../models/server');
+var Job = require('../models/job');
+var Event = require('../models/event');
 
 mongoose.myInit().done(() => {
-  Server = require('../models/server');
-  Job = require('../models/job');
-  Event = require('../models/event');
   start();
 }, e => {
   console.log("Couldn't create fixtures: " + e);
@@ -56,7 +53,6 @@ var createDummyServer = function(id, state, idleTime, busyTime) {
   console.log('Creating server "' + id + '"');
   var server = new Server({
     _id: id,
-    created: Date.now(),
     state: state,
     idleTime: idleTime,
     busyTime: busyTime

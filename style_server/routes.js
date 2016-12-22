@@ -87,8 +87,8 @@ function validate(msg) {
     var command = msg.command || '';
     var data = msg.data;
 
-    if (!data.requestId) {
-        console.log("Missing parameter requestId");
+    if (!data.jobId) {
+        console.log("Missing parameter jobId");
         return false;
     }
 

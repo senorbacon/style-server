@@ -1,4 +1,4 @@
-var mongoose = require('mongoose');
+var mongoose = require('./bootstrap');
 var Schema   = mongoose.Schema;
 var autoIncrement = require('mongoose-auto-increment');
 
@@ -11,6 +11,8 @@ var Event = new Schema({
   processed       : Date,
 });
 
-Event.plugin(autoIncrement.plugin, 'Event');
+mongoose.myInit().done(() => {
+  Event.plugin(autoIncrement.plugin, 'Event');
+});
 
 module.exports = mongoose.model('Event', Event);

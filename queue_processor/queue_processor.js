@@ -16,13 +16,19 @@ var queueName = process.argv[2]
 var handlers = {};
 
 // job commands
+handlers[constants.MSG_JOB_START] = commands.jobStart;
 handlers[constants.MSG_JOB_RETRY] = commands.jobRetry;
+handlers[constants.MSG_JOB_CANCEL] = commands.jobCancel;
 
 // server status updates
+handlers[constants.MSG_SERVER_CREATED] = updates.serverCreated;
 handlers[constants.MSG_SERVER_ONLINE] = updates.serverOnline;
+handlers[constants.MSG_SERVER_READY] = updates.serverReady;
+handlers[constants.MSG_SERVER_KILLED] = updates.serverKilled;
+
+// job status updates
 handlers[constants.MSG_JOB_STARTED] = updates.jobStarted;
 handlers[constants.MSG_JOB_FINISHED] = updates.jobFinished;
-handlers[constants.MSG_SERVER_BUSY] = updates.serverBusy;
 
 // supporting service updates
 handlers[constants.MSG_DOWNLOAD_SERVER_ERROR] = updates.downloadServerError;
@@ -30,6 +36,7 @@ handlers[constants.MSG_GENERATOR_RESTART] = updates.generatorRestart;
 handlers[constants.MSG_GENERATOR_FAILURE_THRESHOLD] = updates.failureThreshold;
 
 // job request updates
+handlers[constants.MSG_JOB_REQUEST_FAILED] = updates.jobRequestFailed;
 handlers[constants.MSG_JOB_PROGRESS] = updates.jobProgress;
 handlers[constants.MSG_JOB_SUCCESS] = updates.jobSuccess;
 handlers[constants.MSG_JOB_FAILED] = updates.jobFailed;
@@ -47,4 +54,9 @@ when.join(sqs.init(), mongoose.myInit()).done(() => {
 
 function start() {
     console.log("Starting queue processor for queue " + queueName);
+
+    // poll queue
+    while (false) {
+        
+    }
 }

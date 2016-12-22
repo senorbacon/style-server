@@ -1,35 +1,99 @@
 var config = require('../config');
 var sqs = require('../sqs/sqs.js');
 var Server = require('../models/server');
+var Job = require('../models/job');
+
+module.exports.serverCreated = function(event) {
+    // create server if doesn't exist
+    return Server.findOne({ instanceId: event.fromServer }).exec().then( (server) => {
+        if (server) {
+            console.warn(event.type + ": Already have server " + event.fromServer);
+        } else {
+            var server = new Server({
+               _id: event.fromServer,
+            });
+            server.save().done(() => {
+                console.log("Server " + event.fromServer + " created.");
+            })
+        }
+    });
+}
+
+function setServerState(serverId, state) {
+    // set server.status
+    return Server.findOne({ instanceId: serverId }).exec().then( (server) => {
+        if (!server) {
+            throw new Error(event.type + ": Can't find server " + serverId);
+        } else {
+            return server.setState(state).then(() => {
+                console.log("Server " + serverId + " is now " + state + ".");
+            })
+        }
+    });
+}
 
 module.exports.serverOnline = function(event) {
-    // create server if doesn't exist
-    // set status to online
-/*    
-  Server.find({ instanceId: event.instanceId }).done( (instanceId) => {
-    console.log("found server with ID " + event.instanceId)
-  });
-*/
+    return setServerState(event.fromServer, constants.SERVER_ONLINE);
+}
+
+module.exports.serverReady = function(event) {
+    return setServerState(event.fromServer, constants.SERVER_READY);
+}
+
+module.exports.serverKilled = function(event) {
+    return setServerState(event.fromServer, constants.SERVER_KILLED);
 }
 
 module.exports.jobStarted = function(event) {
-    // look up job, set status, timestamp, and server
+    findJobPromise = Job.findOne({ _id: event.jobId }).exec();
+    findServerPromise = Server.findOne({ instanceId: event.serverId }).exec();
+
+    return when.join(findJobPromise, findServerPromise).then( (fulfilled) => {
+        job = fulfilled[0];
+        server = fulfilled[1];
+        if (!job) {
+            throw new Error(event.type + ": Can't find job " + event.jobId);
+        } else if (!server) {
+            throw new Error(event.type + ": Can't find server " + event.serverId);
+        } 
+        return when.join(job.setJobStarted(event.serverId), server.setJobStarted());
+    });
 }
 
 module.exports.jobFinished = function(event) {
-    // look up job, set status and timestamp
-    // set busy time of server
+    findJobPromise = Job.findOne({ _id: event.jobId }).exec();
+    findServerPromise = Server.findOne({ instanceId: event.serverId }).exec();
+
+    return when.join(findJobPromise, findServerPromise).then( (fulfilled) => {
+        job = fulfilled[0];
+        server = fulfilled[1];
+        if (!job) {
+            throw new Error(event.type + ": Can't find job " + event.jobId);
+        } else if (!server) {
+            throw new Error(event.type + ": Can't find server " + event.serverId);
+        } 
+        return when.join(job.setJobFinished(), server.setJobFinished(job));
+    });
 }
 
-// TODO: rename this to jobRequestFailed
-module.exports.serverBusy = function(event) {
-    // look up job, set status to failed
-    // retry job
+module.exports.jobRequestFailed = function(event) {
+    return Job.findOne({ _id: event.jobId }).exec().then( (job) => {
+        if (!job) {
+            throw new Error(event.type + ": Can't find job " + event.jobId);
+        } else {
+            return job.failAndRetry(constants.JOB_REQUEST_FAILED);
+        }
+    });
 }
 
 module.exports.downloadServerError = function(event) {
-    // look up job, set status to failed
-    // retry job?
+    return Job.findOne({ _id: event.jobId }).exec().then( (job) => {
+        if (!job) {
+            throw new Error(event.type + ": Can't find job " + event.jobId);
+        } else {
+            return job.failAndRetry(constants.JOB_FAILED);
+        }
+    });
 }
 
 module.exports.generatorRestart = function(event) {
@@ -42,20 +106,37 @@ module.exports.failureThreshold = function(event) {
 }
 
 module.exports.jobProgress = function(event) {
-    // look up job, set status, progress
-    // add progress image to array
+    return Job.findOne({ _id: event.jobId }).exec().then( (job) => {
+        if (!job) {
+            throw new Error(event.type + ": Can't find job " + event.jobId);
+        } else {
+            return job.setProgress(event.progress);
+        }
+    });
 }
 
 module.exports.jobSuccess = function(event) {
-    // look up job, set status
+    // nothing to do?  we already handle job cleanup in jobFinished
 }
 
 module.exports.jobFailed = function(event) {
-    // look up job, set status
+    return Job.findOne({ _id: event.jobId }).exec().then( (job) => {
+        if (!job) {
+            throw new Error(event.type + ": Can't find job " + event.jobId);
+        } else {
+            return job.failAndRetry(constants.JOB_FAILED);
+        }
+    });
 }
 
 module.exports.jobCancelled = function(event) {
-    // look up job, set status
+    return Job.findOne({ _id: event.jobId }).exec().then( (job) => {
+        if (!job) {
+            throw new Error(event.type + ": Can't find job " + event.jobId);
+        } else {
+            return job.setState(constants.JOB_CANCELLED);
+        }
+    });
 }
 
 module.exports.cancelFailed = function(event) {

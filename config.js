@@ -12,6 +12,10 @@ config.bucketPublic = 'ww-style-public';
 config.bucketUsers = 'ww-style-users';
 config.tmpDir = process.env.STYLE_TEMP_DIR || "c:\\tmp\\style\\";
 
+// job retry threshold
+config.jobRetryMax = 3;
+
+// server child process restarts
 config.restartThreshold = 20;
 
 config.command = process.env.STYLE_CMD || "node";

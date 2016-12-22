@@ -3,8 +3,12 @@ var config     = require('../config');
 var when       = require('when');
 var autoIncrement = require('mongoose-auto-increment');
 
+mongoose.Promise = when;
+
+var initPromise;
+
 // return a promise that fulfills with the mongoose object once we're connected
-mongoose.myInit = function() {
+function initMongoose() {
   var connection;
 
   return when.promise(function(resolve, reject) {
@@ -39,5 +43,12 @@ mongoose.myInit = function() {
     autoIncrement.initialize(connection);
   });
 };
+
+mongoose.myInit = function() {
+  if (!initPromise)
+    initPromise = initMongoose();
+
+  return initPromise;
+}
 
 module.exports = mongoose;

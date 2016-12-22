@@ -68,11 +68,11 @@ function generate(data) {
                 console.log(`generate process exited with code ${code}`);
             }
             child = null;
-            console.log(`Request ${data.requestId} has finished processing.`);
+            console.log(`Request ${data.jobId} has finished processing.`);
             sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_JOB_FINISHED, data);
         });
 
-        console.log(`Request ${data.requestId} has started processing.`);
+        console.log(`Request ${data.jobId} has started processing.`);
         sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_JOB_STARTED, data);
     } else {
         console.log("generate request failed, server busy");
@@ -82,12 +82,12 @@ function generate(data) {
 
 function cancel(data) {
     if (child) {
-        if (child.customData.requestId == data.requestId) {
+        if (child.customData.jobId == data.jobId) {
             child.kill();
             console.log("generate process cancelled");
             sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_JOB_CANCELLED, data);
         } else {
-            console.log("did not cancel generate process, requestIDs did not match");
+            console.log("did not cancel generate process, jobIds did not match");
             sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_INVALID_CANCEL_REQ, data);
         }
     } else {

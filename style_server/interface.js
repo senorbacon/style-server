@@ -6,7 +6,6 @@ var sqs = require('../sqs/sqs.js');
 var generator = null;
 
 var restarts = 0;
-var restartThreshold = config.restartThreshold;
 
 process.chdir(__dirname);
 
@@ -32,14 +31,14 @@ var start = function() {
     generator = childProcess.fork("./generate.js");
 
     generator.on('close', (code) => {
-        if (restarts++ < restartThreshold) {
+        if (restarts++ < config.restartThreshold) {
             sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATOR_RESTART, restarts).complete(() => {
                 console.log("Restarting closed generator process. Restarted " + restarts + " times.");
                 start();
             });
         } else {
-            sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATOR_FAILURE_THRESHOLD, restartThreshold).complete(() => {
-                console.log("Couldn't keep generator process open! Restarted " + restartThreshold + " times.")
+            sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATOR_FAILURE_THRESHOLD, config.restartThreshold).complete(() => {
+                console.log("Couldn't keep generator process open! Restarted " + config.restartThreshold + " times.")
                 process.exit();
             });
         }
