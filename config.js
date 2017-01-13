@@ -16,7 +16,7 @@ config.tmpDir = process.env.STYLE_TEMP_DIR || "c:\\tmp\\style\\";
 config.jobRetryMax = 3;
 
 // server child process restarts
-config.restartThreshold = 20;
+config.restartThreshold = 5;
 
 config.command = process.env.STYLE_CMD || "node";
 config.args = process.env.STYLE_CMD_ARGS || "./delay.js";

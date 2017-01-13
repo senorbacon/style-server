@@ -18,7 +18,7 @@ var Server = new Schema({
   stateChangedAt: {
     type          : Date,
     default       : Date.now() 
-  }
+  },
   idleTime: {
     type          : Number,
     default       : 0

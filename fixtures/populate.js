@@ -40,10 +40,10 @@ var removeData = function() {
 
 var createServers = function() {
   return when.all([
-    createDummyServer('dummy-1', 'OFFLINE', 0, 0),
-    createDummyServer('dummy-2', 'ONLINE', 0, 0),
-    createDummyServer('dummy-3', 'READY', 0, 0),
-    createDummyServer('dummy-4', 'BUSY', 0, 0),
+    createDummyServer('dummy-1', constants.SERVER_OFFLINE, 0, 0),
+    createDummyServer('dummy-2', constants.SERVER_ONLINE, 0, 0),
+    createDummyServer('dummy-3', constants.SERVER_READY, 0, 0),
+    createDummyServer('dummy-4', constants.SERVER_BUSY, 0, 0),
   ]).catch((e) => {
     console.log("Trouble creating servers: " + e)
   });
@@ -62,11 +62,11 @@ var createDummyServer = function(id, state, idleTime, busyTime) {
 
 var createJobs = function() {
   return when.all([
-    createDummyJob(1, 'NEW', Date.now(), null, null, 3),
-    createDummyJob(1, 'STARTED', Date.now(), null, 'dummy-4', 4),
-    createDummyJob(1, 'COMPLETED', Date.now() - 1000 * 60 * 60, Date.now(), 'dummy-3', 12),
-    createDummyJob(1, 'PAUSED', Date.now() - 1000 * 60 * 60 * 3, null, 'dummy-1', 1),
-    createDummyJob(1, 'FAILED', Date.now() - 1000 * 60 * 60 * 5, null, 'dummy-1', 8),
+    createDummyJob(1, constants.JOB_NEW, Date.now(), null, null, 3),
+    createDummyJob(1, constants.JOB_STARTED, Date.now(), null, 'dummy-4', 4),
+    createDummyJob(1, constants.COMPLETED, Date.now() - 1000 * 60 * 60, Date.now(), 'dummy-3', 12),
+    createDummyJob(1, constants.PAUSED, Date.now() - 1000 * 60 * 60 * 3, null, 'dummy-1', 1),
+    createDummyJob(1, constants.FAILED, Date.now() - 1000 * 60 * 60 * 5, null, 'dummy-1', 8),
   ]).catch((e) => {
     console.log("Trouble creating jobs: " + e)
   });
@@ -89,12 +89,12 @@ var createDummyJob = function(user_id, state, startTime, endTime, serverId, toke
 
 var createEvents = function() {
   return when.all([
-    createDummyEvent("dummy-1", constants.MSG_SERVER_CREATED, null, Date.now()),
-    createDummyEvent("dummy-2", constants.MSG_SERVER_CREATED, null, Date.now()),
-    createDummyEvent("dummy-3", constants.MSG_SERVER_CREATED, null, Date.now()),
-    createDummyEvent("dummy-4", constants.MSG_SERVER_CREATED, null, Date.now()),
-    createDummyEvent("dummy-5", constants.MSG_SERVER_CREATED, null, Date.now()),
+    createDummyEvent("dummy-1", constants.MSG_SERVER_ONLINE, null, Date.now()),
     createDummyEvent("dummy-2", constants.MSG_SERVER_ONLINE, null, Date.now()),
+    createDummyEvent("dummy-3", constants.MSG_SERVER_ONLINE, null, Date.now()),
+    createDummyEvent("dummy-4", constants.MSG_SERVER_ONLINE, null, Date.now()),
+    createDummyEvent("dummy-5", constants.MSG_SERVER_ONLINE, null, Date.now()),
+    createDummyEvent("dummy-2", constants.MSG_SERVER_OFFLINE, null, Date.now()),
   ]).catch((e) => {
     console.log("Trouble creating events: " + e)
   });

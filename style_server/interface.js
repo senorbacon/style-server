@@ -32,12 +32,12 @@ var start = function() {
 
     generator.on('close', (code) => {
         if (restarts++ < config.restartThreshold) {
-            sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATOR_RESTART, restarts).complete(() => {
+            sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATOR_RESTART, restarts).done(() => {
                 console.log("Restarting closed generator process. Restarted " + restarts + " times.");
                 start();
             });
         } else {
-            sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATOR_FAILURE_THRESHOLD, config.restartThreshold).complete(() => {
+            sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATOR_FAILURE_THRESHOLD, config.restartThreshold).done(() => {
                 console.log("Couldn't keep generator process open! Restarted " + config.restartThreshold + " times.")
                 process.exit();
             });

@@ -21,8 +21,8 @@ handlers[constants.MSG_JOB_RETRY] = commands.jobRetry;
 handlers[constants.MSG_JOB_CANCEL] = commands.jobCancel;
 
 // server status updates
-handlers[constants.MSG_SERVER_CREATED] = updates.serverCreated;
 handlers[constants.MSG_SERVER_ONLINE] = updates.serverOnline;
+handlers[constants.MSG_SERVER_OFFLINE] = updates.serverOffline;
 handlers[constants.MSG_SERVER_READY] = updates.serverReady;
 handlers[constants.MSG_SERVER_KILLED] = updates.serverKilled;
 

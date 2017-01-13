@@ -3,22 +3,6 @@ var sqs = require('../sqs/sqs.js');
 var Server = require('../models/server');
 var Job = require('../models/job');
 
-module.exports.serverCreated = function(event) {
-    // create server if doesn't exist
-    return Server.findOne({ instanceId: event.fromServer }).exec().then( (server) => {
-        if (server) {
-            console.warn(event.type + ": Already have server " + event.fromServer);
-        } else {
-            var server = new Server({
-               _id: event.fromServer,
-            });
-            server.save().done(() => {
-                console.log("Server " + event.fromServer + " created.");
-            })
-        }
-    });
-}
-
 function setServerState(serverId, state) {
     // set server.status
     return Server.findOne({ instanceId: serverId }).exec().then( (server) => {
@@ -33,7 +17,26 @@ function setServerState(serverId, state) {
 }
 
 module.exports.serverOnline = function(event) {
-    return setServerState(event.fromServer, constants.SERVER_ONLINE);
+    // create server if doesn't exist
+    return Server.findOne({ instanceId: event.fromServer }).exec().then( (server) => {
+        if (server) {
+            return server.setState(constants.SERVER_ONLINE).then(() => {
+                console.log("Server " + event.fromServer + " is now " + state + ".");
+            })
+        } else {
+            var server = new Server({
+               _id: event.fromServer,
+               state: constants.SERVER_ONLINE
+            });
+            return server.save().then(() => {
+                console.log("Server " + event.fromServer + " created.");
+            })
+        }
+    });
+}
+
+module.exports.serverOffline = function(event) {
+    return setServerState(event.fromServer, constants.SERVER_OFFLINE);
 }
 
 module.exports.serverReady = function(event) {
