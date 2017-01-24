@@ -6,6 +6,7 @@ var sqs = require('../sqs/sqs.js');
 var generator = null;
 
 var restarts = 0;
+var shutdown = false;
 
 process.chdir(__dirname);
 
@@ -22,6 +23,10 @@ module.exports.send = function(event) {
     }
 }
 
+module.exports.shutdown = function() {
+    shutdown = true;
+}
+
 /**
  * Start our generator background process.
  * Restart the generator if it closes for some reason, and bail out
@@ -31,16 +36,18 @@ var start = function() {
     generator = childProcess.fork("./generate.js");
 
     generator.on('close', (code) => {
-        if (restarts++ < config.restartThreshold) {
-            sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATOR_RESTART, restarts).done(() => {
-                console.log("Restarting closed generator process. Restarted " + restarts + " times.");
-                start();
-            });
-        } else {
-            sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATOR_FAILURE_THRESHOLD, config.restartThreshold).done(() => {
-                console.log("Couldn't keep generator process open! Restarted " + config.restartThreshold + " times.")
-                process.exit();
-            });
+        if (!shutdown) {
+            if (restarts++ < config.restartThreshold) {
+                sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATOR_RESTART, restarts).done(() => {
+                    console.log("Restarting closed generator process. Restarted " + restarts + " times.");
+                    start();
+                });
+            } else {
+                sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_GENERATOR_FAILURE_THRESHOLD, config.restartThreshold).done(() => {
+                    console.log("Couldn't keep generator process open! Restarted " + config.restartThreshold + " times.")
+                    process.exit();
+                });
+            }
         }
     });
 }

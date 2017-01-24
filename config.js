@@ -8,6 +8,11 @@ config.debug = process.env.DEBUG || 0;
 
 config.serverPort = process.env.STYLE_SERVER_PORT || 3000;
 
+config.sqs = {
+    apiVersion: '2012-11-05',
+    region: "us-west-2",
+}
+
 config.bucketPublic = 'ww-style-public';
 config.bucketUsers = 'ww-style-users';
 config.tmpDir = process.env.STYLE_TEMP_DIR || "c:\\tmp\\style\\";

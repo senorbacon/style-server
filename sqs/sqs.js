@@ -1,8 +1,9 @@
 var AWS = require('aws-sdk'); 
 var when = require('when');
 var Event = require('../models/event');
+var config = require('../config');
 
-var sqs = new AWS.SQS({apiVersion: '2012-11-05', region: "us-west-2"});
+var sqs = new AWS.SQS({apiVersion: config.sqs.apiVersion, region: config.sqs.region});
 
 module.exports.QUEUES = {
     STYLE_GENERATE_CMD: null,

@@ -1,8 +1,9 @@
 if (process.argv.length != 3) {
-    console.log("Usage: node app.js <queue name>");
+    console.log("Usage: node queue_processor.js <queue name>");
     process.exit();
 }
 
+var Consumer = require('sqs-consumer');
 var config = require('../config');
 var sqs = require('../sqs/sqs');
 var constants = require('../lib/constants');
@@ -10,6 +11,7 @@ var commands = require('./commands');
 var updates = require('./updates');
 var when = require('when');
 var mongoose = require("../models/bootstrap")
+var Event = require('../models/event');
 
 var queueName = process.argv[2]
 
@@ -47,16 +49,46 @@ handlers[constants.MSG_CANCEL_IGNORED] = updates.cancelIgnored;
 
 // start the server once everything's ready to go
 when.join(sqs.init(), mongoose.myInit()).done(() => {
-    start();
+    startQueueProcessor(queueName);
 }, e => {
     console.log("Couldn't start server: " + e);
 });
 
-function start() {
+function startQueueProcessor(queueName) {
+    var queueUrl = sqs.QUEUES[queueName];
+    if (!queueUrl) {
+        throw new Error("Invalid queue: " + queueName);
+    }
     console.log("Starting queue processor for queue " + queueName);
 
-    // poll queue
-    while (false) {
-        
-    }
+    var app = Consumer.create({
+        queueUrl: queueUrl,
+        region: config.sqs.region,
+        batchSize: 1,
+        handleMessage: function (message, done) {
+            try {
+                var msgBody = JSON.parse(message.Body);
+                if (!msgBody) {
+                    throw new Error("Invalid JSON in message body [" + message.Body + "]");
+                }
+                var event = Event.hydrate(msgBody);
+                var handler = handlers[event.type];
+                if (!handler) {
+                    throw new Error("No handler for message type [" + event.type + "]");
+                }
+
+                console.log("Handling event: " + event);
+//                handler(event);
+            } catch (e) {
+                return done(e);
+            }
+            return done();
+        }
+    });
+
+    app.on('error', function (err) {
+      console.log(err);
+    });
+
+    app.start();
 }

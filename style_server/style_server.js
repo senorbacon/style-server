@@ -4,6 +4,7 @@ var constants = require('../lib/constants');
 var routes = require('./routes');
 var bodyParser = require('body-parser');
 var sqs = require('../sqs/sqs');
+var interface = require('./interface.js');
 
 var app = express();
 
@@ -26,6 +27,7 @@ sqs.init().done(() => {
 
 var shutdown = function() {
   console.log('style server closing...');
+  interface.shutdown();
   sqs.sendQueueMessage(sqs.QUEUES.STYLE_UPDATE, config.serverId, constants.MSG_SERVER_OFFLINE).done(() => {
     console.log('server ' + config.serverId + ' marked OFFLINE');
     process.exit();

@@ -3,13 +3,12 @@ var config     = require('../config');
 var when       = require('when');
 var autoIncrement = require('mongoose-auto-increment');
 
-mongoose.Promise = when;
-
 var initPromise;
 
 // return a promise that fulfills with the mongoose object once we're connected
 function initMongoose() {
   var connection;
+  console.log("connecting to mongo");
 
   return when.promise(function(resolve, reject) {
     connection = mongoose.connect(config.mongodb.connectionString || 'mongodb://' + config.mongodb.user + ':' + config.mongodb.password + '@' + config.mongodb.server +'/' + config.mongodb.database);
@@ -20,7 +19,6 @@ function initMongoose() {
     mongoose.connection.on('open', function (err) {
       mongoose.connection.db.admin().serverStatus(function(err, data) {
         if (!err) {
-          console.log("Connected to mongo");
           resolve(mongoose);
         } else {
           if (err.name === "MongoError" && (err.errmsg === 'need to login' || err.errmsg === 'unauthorized') && !config.mongodb.connectionString) {
@@ -40,6 +38,8 @@ function initMongoose() {
       });
     });
   }).then(() => {
+    console.log("mongoose connected");
+    mongoose.Promise = when;
     autoIncrement.initialize(connection);
   });
 };
